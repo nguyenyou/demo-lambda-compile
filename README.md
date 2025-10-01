@@ -1,3 +1,31 @@
+```scala
+enum ButtonStyle {
+  case Primary, Secondary, DarkMode
+}
+
+object Style {
+  export ButtonStyle.*
+}
+
+type StyleSelector = Style.type => ButtonStyle
+
+case class Button(style: ButtonStyle)
+
+object Button {
+  transparent inline def apply(
+    inline style: StyleSelector
+  ): Button = {
+    Button(style = style(Style))
+  }
+}
+
+@main def run() = {
+  // Usage - compiled to ButtonL(Style.DarkMode) with no lambda!
+  val myButton = Button(style = _.DarkMode)
+  println(myButton)
+}
+```
+
 ```
 scalac -Xprint:inline experiment.scala
 ```
@@ -426,8 +454,6 @@ package <empty> {
 }
 ```
 
-## Explain
-
 ## Key Evidence of Success ✅
 
 ### 1. Lambda Elimination
@@ -456,7 +482,7 @@ There's no `style.apply(Style)` function call in the final code. The compiler ev
 Notice in the later compilation phase:
 
 ```scala
-scalaprivate inline transparent def apply(inline style: StyleSelector): Button =
+private inline transparent def apply(inline style: StyleSelector): Button =
   scala.compiletime.erasedValue[Button]
 ```
 
@@ -475,3 +501,23 @@ Direct access: `Style.DarkMode`
 Zero runtime overhead
 
 Your transparent inline approach successfully forced compile-time evaluation. The bytecode will contain no lambda or function call - just a direct reference to the DarkMode field. Perfect! 🎉
+
+## Notes
+
+Gotchas to keep in mind:
+
+1. If you pass the lambda through a non-inline val first, e.g.
+
+```scala
+val f: StyleSelector = _.DarkMode
+Button(style = f)
+```
+
+the compiler can’t inline the body (the argument isn’t an inline expression anymore), so it will allocate a Function1.
+
+2.	Any side effects inside the lambda would be duplicated at the call site by inlining. Your accessor is side-effect free, so you’re safe.
+
+3.	This pattern scales: type StyleSelector = Style.type => ButtonStyle can feed many props, and as long as you keep the param inline and the argument a literal lambda, they inline away.
+
+
+
