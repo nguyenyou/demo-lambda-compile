@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="bsp 1" modules="check_f4dd477a3a">
+      <parameters>
+        <parameter value="-Xsemanticdb" />
+        <parameter value="-sourceroot" />
+        <parameter value="$PROJECT_DIR$" />
+        <parameter value="-release" />
+        <parameter value="24" />
+      </parameters>
+    </profile>
+  </component>
+</project>
